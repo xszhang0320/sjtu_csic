@@ -1,8 +1,11 @@
 import numpy as np
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import average_precision_score
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 plt.clf()
 filename = ['CNN+ATT','Hoffmann','MIMLRE','Mintz','PCNN+ATT']
@@ -14,19 +17,21 @@ for i in range(len(filename)):
 
 
 #ATTENTION: put the model iters you want to plot into the list
-model_iter = [10900]
+#model_iter = [9500,10000,10500,11000,11500,12000,12500,13000,13500,14000]
+#model_iter = range(9025,17525,25)
+model_iter = [9325,17225]
 for one_iter in model_iter:
 	y_true = np.load('./data/allans.npy')
-	y_scores = np.load('./out/sample_allprob_iter_'+str(one_iter)+'.npy')
+	y_scores = np.load('./out/allprob_iter_'+str(one_iter)+'.npy')
 
 	precision,recall,threshold = precision_recall_curve(y_true,y_scores)
 	average_precision = average_precision_score(y_true, y_scores)
 
-	plt.plot(recall[:], precision[:], lw=2, color='navy',label='BGRU+2ATT')
+	plt.plot(recall[:], precision[:], lw=2, color='navy',label='BGRU+2ATT')2
 	plt.xlabel('Recall')
 	plt.ylabel('Precision')
-	plt.ylim([0.3, 1.0])
-	plt.xlim([0.0, 0.4])
+	plt.ylim([0.0, 1.0])
+	plt.xlim([0.0, 1.0])
 	plt.title('Precision-Recall Area={0:0.2f}'.format(average_precision))
 	plt.legend(loc="upper right")
 	plt.grid(True)

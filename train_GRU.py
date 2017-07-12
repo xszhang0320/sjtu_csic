@@ -32,6 +32,8 @@ def main(_):
 	train_word = np.load('./data/small_word.npy')
 	train_pos1 = np.load('./data/small_pos1.npy')
 	train_pos2 = np.load('./data/small_pos2.npy')
+	train_ab_pos1 = np.load('./data/small_ab_pos1.npy')
+        train_ab_pos2 = np.load('./data/small_ab_pos2.npy')
 
 	settings = network.Settings()
 	settings.vocab_size = len(wordembedding)
@@ -40,10 +42,13 @@ def main(_):
 	big_num = settings.big_num
 
 	with tf.Graph().as_default():
+		config = tf.ConfigProto(allow_soft_placement = True)
+		config.gpu_options.allow_growth = True
+		sess=tf.Session(config=config)
 
-		sess = tf.Session()
+		#sess = tf.Session()
 		with sess.as_default():
-
+			
 			initializer = tf.contrib.layers.xavier_initializer()
 			with tf.variable_scope("model", reuse=None, initializer = initializer):
 				m = network.GRU(is_training=True, word_embeddings = wordembedding, settings = settings)
@@ -71,7 +76,7 @@ def main(_):
 			# embedding_conf.metadata_path = './data/metadata.tsv'
 			# projector.visualize_embeddings(summary_embed_writer, config)
 
-			def train_step(word_batch, pos1_batch, pos2_batch, y_batch,big_num):
+			def train_step(word_batch, pos1_batch, pos2_batch, ab_pos1_batch, ab_pos2_batch, y_batch,big_num):
 
 				feed_dict = {}
 				total_shape = []
@@ -79,6 +84,8 @@ def main(_):
 				total_word = []
 				total_pos1 = []
 				total_pos2 = []
+				total_ab_pos1 = []
+				total_ab_pos2 = []
 				for i in range(len(word_batch)):
 					total_shape.append(total_num)
 					total_num += len(word_batch[i])
@@ -88,16 +95,24 @@ def main(_):
 						total_pos1.append(pos1)
 					for pos2 in pos2_batch[i]:
 						total_pos2.append(pos2)
+					for ab_pos1 in ab_pos1_batch[i]:
+						total_ab_pos1.append(ab_pos1)
+					for ab_pos2 in ab_pos2_batch[i]:
+						total_ab_pos2.append(ab_pos2)
 				total_shape.append(total_num)
 				total_shape = np.array(total_shape)
 				total_word = np.array(total_word)
 				total_pos1 = np.array(total_pos1)
 				total_pos2 = np.array(total_pos2)
+				total_ab_pos1 = np.array(total_ab_pos1)
+				total_ab_pos2 = np.array(total_ab_pos2)
 
 				feed_dict[m.total_shape] = total_shape
 				feed_dict[m.input_word] = total_word
 				feed_dict[m.input_pos1] = total_pos1
 				feed_dict[m.input_pos2] = total_pos2
+				feed_dict[m.absolute_pos1] = total_ab_pos1
+				feed_dict[m.absolute_pos2] = total_ab_pos2
 				feed_dict[m.input_y] = y_batch
 
 				temp, step, loss, accuracy,summary,l2_loss,final_loss= sess.run([train_op, global_step, m.total_loss, m.accuracy,merged_summary,m.l2_loss,m.final_loss], feed_dict)
@@ -124,6 +139,8 @@ def main(_):
 					temp_word = []
 					temp_pos1 = []
 					temp_pos2 = []
+					temp_ab_pos1 = []
+					temp_ab_pos2 = []
 					temp_y = []
 
 					temp_input = temp_order[i*settings.big_num:(i+1)*settings.big_num]
@@ -131,6 +148,8 @@ def main(_):
 						temp_word.append(train_word[k])
 						temp_pos1.append(train_pos1[k])
 						temp_pos2.append(train_pos2[k])
+						temp_ab_pos1.append(train_ab_pos1[k])
+						temp_ab_pos2.append(train_ab_pos2[k])
 						temp_y.append(train_y[k])
 					num = 0
 					for single_word in temp_word:
@@ -139,19 +158,23 @@ def main(_):
 					if num > 1500:
 						print 'out of range'
 						continue
-
+					
 					temp_word = np.array(temp_word)
 					temp_pos1 = np.array(temp_pos1)
 					temp_pos2 = np.array(temp_pos2)
+					temp_ab_pos1 = np.array(temp_ab_pos1)
+                                        temp_ab_pos2 = np.array(temp_ab_pos2)
 					temp_y = np.array(temp_y)
 
-					train_step(temp_word,temp_pos1,temp_pos2,temp_y,settings.big_num)
+					train_step(temp_word,temp_pos1,temp_pos2, temp_ab_pos1, temp_ab_pos2 ,temp_y,settings.big_num)
 
 					current_step = tf.train.global_step(sess, global_step)
-					if current_step > 9000 and current_step%500==0:
+					if current_step>15000:
+						break
+					if current_step > 9000 and current_step%100==0: #ATTENTION
 					#if current_step == 50:
 						print 'saving model'
-						path = saver.save(sess,save_path +'ATT_GRU_model',global_step=current_step)
+						path = saver.save(sess,save_path +'TYPE_GRU_model',global_step=current_step)
 						tempstr = 'have saved model to '+path
 						print tempstr
 

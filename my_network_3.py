@@ -9,8 +9,6 @@ class Settings(object):
 		self.num_steps = 70
 		self.num_epochs = 3
 		self.num_classes = 53
-		self.num_head_types = 28
-		self.num_tail_types = 25
 		self.gru_size = 230
 		self.keep_prob = 0.5
 		self.num_layers = 1
@@ -23,6 +21,7 @@ class Settings(object):
 		self.type_head = np.load('./data/type_head.npy')
 		self.type_tail = np.load('./data/type_tail.npy')
 		
+		
 
 class GRU:
 	def __init__(self,is_training,word_embeddings,settings):
@@ -30,8 +29,6 @@ class GRU:
 		self.num_steps = num_steps = settings.num_steps	
 		self.vocab_size = vocab_size = settings.vocab_size
 		self.num_classes = num_classes = settings.num_classes
-		self.num_head_types = num_head_types = settings.num_head_types
-		self.num_tail_types = num_tail_types = settings.num_tail_types
 		self.gru_size = gru_size = settings.gru_size
 		self.big_num = big_num = settings.big_num
 		self.type_head = settings.type_head
@@ -44,8 +41,6 @@ class GRU:
 		self.absolute_pos1 = tf.placeholder(dtype=tf.int32,shape=[None,num_steps],name='absolute_pos1')
 		self.absolute_pos2 = tf.placeholder(dtype=tf.int32,shape=[None,num_steps],name='absolute_pos2')
 		self.input_y = tf.placeholder(dtype=tf.float32,shape=[None,num_classes],name='input_y')
-                self.input_y_head = tf.placeholder(dtype=tf.float32,shape=[None,num_head_types],name='input_y_head')
-                self.input_y_tail = tf.placeholder(dtype=tf.float32,shape=[None,num_tail_types],name='input_y_tail')
 		self.total_shape = tf.placeholder(dtype=tf.int32,shape=[big_num+1],name='total_shape')
 		total_num = self.total_shape[-1]
 
@@ -54,25 +49,11 @@ class GRU:
 		pos2_embedding = tf.get_variable('pos2_embedding',[settings.pos_num,settings.pos_size])
 
 		attention_w = tf.get_variable('attention_omega',[gru_size,1])
-		#sen_a = tf.get_variable('attention_A',[gru_size*2])
-		#sen_r = tf.get_variable('query_r',[gru_size*2,1])		
-                sen_a_head = tf.get_variable('attention_A_head',[gru_size])
-                sen_r_head = tf.get_variable('query_r_head',[gru_size,1])
-                sen_a_tail = tf.get_variable('attention_A_tail',[gru_size])
-                sen_r_tail = tf.get_variable('query_r_tail',[gru_size,1])		
+		sen_a = tf.get_variable('attention_A',[gru_size*2])
+		sen_r = tf.get_variable('query_r',[gru_size*2,1])		
 		#relation_embedding = tf.get_variable('relation_embedding',[self.num_classes,gru_size*2])
-		#relation_embedding = tf.get_variable('relation_embedding',[self.embedding_dim*4,gru_size*2])
-		#sen_d = tf.get_variable('bias_d',[self.num_classes])
-		sen_d_head = tf.get_variable('bias_d_head',[self.num_head_types])
-		sen_d_tail = tf.get_variable('bias_d_tail',[self.num_tail_types])                
-
-		sen_a_r = tf.get_variable('attention',[gru_size*2])
-                sen_r_r = tf.get_variable('query',[gru_size*2,1])
-                #relation_embedding = tf.get_variable('relation_embedding',[self.num_classes,gru_size*2])
-		relation_embedding_head = tf.get_variable('relation_embedding_r',[self.num_head_types, gru_size])
-		relation_embedding_tail = tf.get_variable('relation_embedding_r',[self.num_tail_types, gru_size])
-                relation_embedding_r = tf.get_variable('relation_embedding_r',[self.num_classes, gru_size*2])
-                sen_d_r = tf.get_variable('bias_d_r',[self.num_classes])
+		relation_embedding = tf.get_variable('relation_embedding',[self.embedding_dim*4,gru_size*2])
+		sen_d = tf.get_variable('bias_d',[self.num_classes])
 
 		gru_cell_forward = tf.nn.rnn_cell.GRUCell(gru_size)
 		gru_cell_backward = tf.nn.rnn_cell.GRUCell(gru_size)
@@ -85,25 +66,11 @@ class GRU:
 		cell_forward = tf.nn.rnn_cell.MultiRNNCell([gru_cell_forward]*settings.num_layers)
 		cell_backward = tf.nn.rnn_cell.MultiRNNCell([gru_cell_backward]*settings.num_layers)		
 
-		#sen_repre_type = []
-		#sen_alpha_type = []
-		#sen_s_type = []
-		#sen_out_type = []
-                sen_repre_head = []
-                sen_alpha_head = []
-                sen_s_head = []
-                sen_out_head = []
-                sen_repre_tail = []
-                sen_alpha_tail = []
-                sen_s_tail = []
-                sen_out_tail = []
-                sen_repre_r = []
-                sen_alpha_r = []
-                sen_s_r = []
-                sen_out_r = []
+		sen_repre = []
+		sen_alpha = []
+		sen_s = []
+		sen_out = []
 		self.prob = []
-		self.prob_head = []
-		self.prob_tail = []
 		self.predictions = []
 		self.loss = []
 		self.accuracy = []
@@ -182,45 +149,29 @@ class GRU:
 		
 		# word-level attention layer
 		output_h = tf.add(output_forward,output_backward)
-		attention_r = tf.reshape(tf.batch_matmul(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.reshape(tf.tanh(output_h),[total_num*num_steps,gru_size]),attention_w),[total_num,num_steps])),[total_num,1,num_steps]),output_h),[total_num,gru_size])
-		
+		#attention_r = tf.reshape(tf.batch_matmul(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.reshape(tf.tanh(output_h),[total_num*num_steps,gru_size]),attention_w),[total_num,num_steps])),[total_num,1,num_steps]),output_h),[total_num,gru_size])
 		attention_h = tf.reshape(tf.batch_matmul(tf.reshape(tf.cast(self.absolute_pos1, tf.float32),[total_num,1,num_steps]),output_h),[total_num, gru_size])
 		attention_t = tf.reshape(tf.batch_matmul(tf.reshape(tf.cast(self.absolute_pos2, tf.float32),[total_num,1,num_steps]),output_h),[total_num, gru_size])
 		
-		#attention_type = tf.concat(1 , [attention_h, attention_t])
+		attention_r = tf.concat(1 , [attention_h, attention_t])
 		# sentence-level attention layer
 		for i in range(big_num):
 
-			#sen_repre_type.append(tf.tanh(attention_type[self.total_shape[i]:self.total_shape[i+1]]))
-			sen_repre_head.append(tf.tanh(attention_head[self.total_shape[i]:self.total_shape[i+1]]))
-			sen_repre_tail.append(tf.tanh(attention_tail[self.total_shape[i]:self.total_shape[i+1]]))
-			sen_repre_r.append(tf.tanh(attention_type[self.total_shape[i]:self.total_shape[i+1]]))
-
+			sen_repre.append(tf.tanh(attention_r[self.total_shape[i]:self.total_shape[i+1]]))
 			batch_size = self.total_shape[i+1]-self.total_shape[i]
 		
-			#sen_alpha_type.append(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.mul(sen_repre_type[i],sen_a),sen_r),[batch_size])),[1,batch_size]))
-			sen_alpha_head.append(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.mul(sen_repre_head[i],sen_a_head),sen_r_head),[batch_size])),[1,batch_size]))
-			sen_alpha_tail.append(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.mul(sen_repre_tail[i],sen_a_tail),sen_r_tail),[batch_size])),[1,batch_size]))
-			sen_alpha_r.append(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.mul(sen_repre_r[i],sen_a_r),sen_r_r),[batch_size])),[1,batch_size]))
+			sen_alpha.append(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.mul(sen_repre[i],sen_a),sen_r),[batch_size])),[1,batch_size]))
 		
-			#sen_s_type.append(tf.reshape(tf.matmul(sen_alpha_type[i],sen_repre_type[i]),[gru_size*2,1]))
-			sen_s_head.append(tf.reshape(tf.matmul(sen_alpha_head[i],sen_repre_head[i]),[gru_size,1]))
-			sen_s_tail.append(tf.reshape(tf.matmul(sen_alpha_tail[i],sen_repre_tail[i]),[gru_size,1]))
-			sen_s_r.append(tf.reshape(tf.matmul(sen_alpha_r[i],sen_repre_r[i]),[gru_size*2,1]))
-			#sen_out_type.append(tf.add(tf.reshape(tf.matmul(tf.reshape(tf.matmul(rels,relation_embedding),[self.num_classes, gru_size*2]),sen_s_type[i]),[self.num_classes]),sen_d))
-			sen_out_head.append(tf.add(tf.reshape(tf.matmul(relation_embedding_head,sen_s_head[i]),[self.num_head_types]),sen_d_head))
-			sen_out_tail.append(tf.add(tf.reshape(tf.matmul(relation_embedding_tail,sen_s_tail[i]),[self.num_tail_types]),sen_d_tail))
-			sen_out_r.append(tf.add(tf.reshape(tf.matmul(relation_embedding_r,sen_s_r[i]),[self.num_classes]),sen_d_r))
-			
-			self.prob_head.append(tf.nn.softmax(sen_out_head[i]))
-			self.prob_tail.append(tf.nn.softmax(sen_out_tail[i]))
-			self.prob.append(tf.nn.softmax(sen_out_r[i]))
+			sen_s.append(tf.reshape(tf.matmul(sen_alpha[i],sen_repre[i]),[gru_size*2,1]))
+			sen_out.append(tf.add(tf.reshape(tf.matmul(tf.reshape(tf.matmul(rels,relation_embedding),[self.num_classes, gru_size*2]),sen_s[i]),[self.num_classes]),sen_d))
+		
+			self.prob.append(tf.nn.softmax(sen_out[i]))
 
 			with tf.name_scope("output"):
 				self.predictions.append(tf.argmax(self.prob[i], 0, name="predictions"))
 
 			with tf.name_scope("loss"):
-				self.loss.append(0.5*tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(sen_out_r[i], self.input_y[i]))+0.25*tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(sen_out_head[i], self.input_y_head[i]))+0.25*tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(sen_out_tail[i], self.input_y_tail[i])))
+				self.loss.append(tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(sen_out[i], self.input_y[i])))
 				if i == 0:
 					self.total_loss = self.loss[i]
 				else:

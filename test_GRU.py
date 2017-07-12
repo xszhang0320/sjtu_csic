@@ -19,7 +19,7 @@ if itchat_run:
 def main(_):
 
 	# ATTENTION: change pathname before you load your model
-	pathname = "./model/ATT_GRU_model-"
+	pathname = "./model/TYPE_GRU_model-"
 	
 	wordembedding = np.load('./data/vec.npy')
 
@@ -31,11 +31,13 @@ def main(_):
 	big_num_test = test_settings.big_num
 
 	with tf.Graph().as_default():
-
-		sess = tf.Session()
+		config = tf.ConfigProto(allow_soft_placement = True)
+		config.gpu_options.allow_growth = True
+		sess=tf.Session(config=config)
+		#sess = tf.Session()
 		with sess.as_default():
 
-			def test_step(word_batch, pos1_batch, pos2_batch, y_batch):
+			def test_step(word_batch, pos1_batch, pos2_batch, ab_pos1_batch, ab_pos2_batch, y_batch):
 	
 				feed_dict = {}
 				total_shape = []
@@ -43,6 +45,8 @@ def main(_):
 				total_word = []
 				total_pos1 = []
 				total_pos2 = []
+				total_ab_pos1 = []
+				total_ab_pos2 = []
 				
 				for i in range(len(word_batch)):
 					total_shape.append(total_num)
@@ -53,17 +57,24 @@ def main(_):
 						total_pos1.append(pos1)
 					for pos2 in pos2_batch[i]:
 						total_pos2.append(pos2)
-				
+                                        for ab_pos1 in ab_pos1_batch[i]:
+                                                total_ab_pos1.append(ab_pos1)
+                                        for ab_pos2 in ab_pos2_batch[i]:
+                                                total_ab_pos2.append(ab_pos2)
 				total_shape.append(total_num)
 				total_shape = np.array(total_shape)
 				total_word = np.array(total_word)
 				total_pos1 = np.array(total_pos1)
 				total_pos2 = np.array(total_pos2)
+				total_ab_pos1 = np.array(total_ab_pos1)
+				total_ab_pos2 = np.array(total_ab_pos2)
 
 				feed_dict[mtest.total_shape] = total_shape
 				feed_dict[mtest.input_word] = total_word
 				feed_dict[mtest.input_pos1] = total_pos1
 				feed_dict[mtest.input_pos2] = total_pos2
+				feed_dict[mtest.absolute_pos1] = total_ab_pos1
+				feed_dict[mtest.absolute_pos2] = total_ab_pos2
 				feed_dict[mtest.input_y] = y_batch
 
 				loss, accuracy ,prob= sess.run(
@@ -71,11 +82,11 @@ def main(_):
 				return prob,accuracy
 
 			# evaluate p@n
-			def eval_pn(test_y,test_word,test_pos1,test_pos2,test_settings):
+			def eval_pn(test_y,test_word,test_pos1,test_pos2,test_ab_pos1, test_ab_pos2,test_settings):
 				allprob = [] 
 				acc = []
 				for i in range(int(len(test_word)/float(test_settings.big_num))):
-					prob,accuracy = test_step(test_word[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y[i*test_settings.big_num:(i+1)*test_settings.big_num])
+					prob,accuracy = test_step(test_word[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y[i*test_settings.big_num:(i+1)*test_settings.big_num])
 					acc.append(np.mean(np.reshape(np.array(accuracy),(test_settings.big_num))))
 					prob = np.reshape(np.array(prob),(test_settings.big_num,test_settings.num_classes))
 					for single_prob in prob:
@@ -153,15 +164,17 @@ def main(_):
 				#test_pos1 = np.load('./data/ptwo_test_pos1.npy')
 				#test_pos2 = np.load('./data/ptwo_test_pos2.npy')
 				#eval_pn(test_y,test_word,test_pos1,test_pos2,test_settings)
-
-				print 'Evaluating P@N for all'
-				if itchat_run:
-					itchat.send('Evaluating P@N for all',FLAGS.wechat_name)
-				test_y = np.load('./data/pall_test_y.npy')
-				test_word = np.load('./data/pall_test_word.npy')
-				test_pos1 = np.load('./data/pall_test_pos1.npy')
-				test_pos2 = np.load('./data/pall_test_pos2.npy')
-				eval_pn(test_y,test_word,test_pos1,test_pos2,test_settings)
+				#
+				#print 'Evaluating P@N for all'
+				#if itchat_run:
+				#	itchat.send('Evaluating P@N for all',FLAGS.wechat_name)
+				#test_y = np.load('./data/pall_test_y.npy')
+				#test_word = np.load('./data/pall_test_word.npy')
+				#test_pos1 = np.load('./data/pall_test_pos1.npy')
+				#test_pos2 = np.load('./data/pall_test_pos2.npy')
+                                #test_ab_pos1 = np.load('./data/pall_test_ab_pos1.npy')
+                                #test_ab_pos2 = np.load('./data/pall_test_ab_pos2.npy')
+				#eval_pn(test_y,test_word,test_pos1,test_pos2, test_ab_pos1,test_ab_pos2,test_settings)
 				
 				time_str = datetime.datetime.now().isoformat()
 				print time_str
@@ -173,10 +186,12 @@ def main(_):
 				test_word = np.load('./data/testall_word.npy')
 				test_pos1 = np.load('./data/testall_pos1.npy')
 				test_pos2 = np.load('./data/testall_pos2.npy')
+                                test_ab_pos1 = np.load('./data/test_ab_pos1.npy')
+                                test_ab_pos2 = np.load('./data/test_ab_pos2.npy')
 				allprob = [] 
 				acc = []
 				for i in range(int(len(test_word)/float(test_settings.big_num))):
-					prob,accuracy = test_step(test_word[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y[i*test_settings.big_num:(i+1)*test_settings.big_num])
+					prob,accuracy = test_step(test_word[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y[i*test_settings.big_num:(i+1)*test_settings.big_num])
 					acc.append(np.mean(np.reshape(np.array(accuracy),(test_settings.big_num))))
 					prob = np.reshape(np.array(prob),(test_settings.big_num,test_settings.num_classes))
 					for single_prob in prob:
@@ -188,7 +203,7 @@ def main(_):
 				current_step = model_iter
 				
 				# ATTENTION: change the save path before you save your result !!
-				np.save('./out/allprob_iter_'+str(current_step)+'.npy',allprob)
+				np.save('./out/allprob_type_iter_'+str(current_step)+'.npy',allprob)
 				allans = np.load('./data/allans.npy')
 				
 				#caculate the pr curve area
