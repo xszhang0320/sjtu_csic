@@ -29,6 +29,8 @@ def main(_):
 
 	print 'reading training data'
 	train_y = np.load('./data/small_y.npy')
+	train_y_head = np.load('./data/small_y_head.npy')
+	train_y_tail = np.load('./data/small_y_tail.npy')
 	train_word = np.load('./data/small_word.npy')
 	train_pos1 = np.load('./data/small_pos1.npy')
 	train_pos2 = np.load('./data/small_pos2.npy')
@@ -76,7 +78,7 @@ def main(_):
 			# embedding_conf.metadata_path = './data/metadata.tsv'
 			# projector.visualize_embeddings(summary_embed_writer, config)
 
-			def train_step(word_batch, pos1_batch, pos2_batch, ab_pos1_batch, ab_pos2_batch, y_batch,big_num):
+			def train_step(word_batch, pos1_batch, pos2_batch, ab_pos1_batch, ab_pos2_batch, y_batch, y_head_bacth, y_tail_batch ,big_num):
 
 				feed_dict = {}
 				total_shape = []
@@ -114,6 +116,8 @@ def main(_):
 				feed_dict[m.absolute_pos1] = total_ab_pos1
 				feed_dict[m.absolute_pos2] = total_ab_pos2
 				feed_dict[m.input_y] = y_batch
+				feed_dict[m.input_y_head] = y_head_bacth
+				feed_dict[m.input_y_tail] = y_tail_batch
 
 				temp, step, loss, accuracy,summary,l2_loss,final_loss= sess.run([train_op, global_step, m.total_loss, m.accuracy,merged_summary,m.l2_loss,m.final_loss], feed_dict)
 				time_str = datetime.datetime.now().isoformat()
@@ -142,6 +146,8 @@ def main(_):
 					temp_ab_pos1 = []
 					temp_ab_pos2 = []
 					temp_y = []
+					temp_y_head = []
+					temp_y_tail = []
 
 					temp_input = temp_order[i*settings.big_num:(i+1)*settings.big_num]
 					for k in temp_input:
@@ -151,6 +157,8 @@ def main(_):
 						temp_ab_pos1.append(train_ab_pos1[k])
 						temp_ab_pos2.append(train_ab_pos2[k])
 						temp_y.append(train_y[k])
+						temp_y_head.append(train_y_head[k])
+						temp_y_tail.append(train_y_tail[k])
 					num = 0
 					for single_word in temp_word:
 						num += len(single_word)
@@ -165,8 +173,25 @@ def main(_):
 					temp_ab_pos1 = np.array(temp_ab_pos1)
                                         temp_ab_pos2 = np.array(temp_ab_pos2)
 					temp_y = np.array(temp_y)
-
-					train_step(temp_word,temp_pos1,temp_pos2, temp_ab_pos1, temp_ab_pos2 ,temp_y,settings.big_num)
+					temp_y_head = np.array(temp_y_head)
+					temp_y_tail = np.array(temp_y_tail)
+					#print 'y_head shape %s' % temp_y_head.shape
+					f = open('./tmp/y_head.txt','w')
+					for i in temp_y_head:
+						for j in temp_y_head[i]:
+							f.write(str(temp_y_head[i][j])+'\t')
+						f.write('\n')
+					f.close()
+					#print 'y_tail shape %s' % temp_y_tail.shape
+					f = open('./tmp/y_tail.txt','w')
+                                        for i in temp_y_tail:
+                                                for j in temp_y_tail[i]:
+                                                        f.write(str(temp_y_tail[i][j])+'\t')
+                                                f.write ('\n')
+					f.close()
+                                        #print 'y_tail %s' %temp_y_tail
+'''
+					train_step(temp_word,temp_pos1,temp_pos2, temp_ab_pos1, temp_ab_pos2 ,temp_y, temp_y_head, temp_y_tail, settings.big_num)
 
 					current_step = tf.train.global_step(sess, global_step)
 					if current_step>15000:
@@ -174,13 +199,13 @@ def main(_):
 					if current_step > 9000 and current_step%100==0: #ATTENTION
 					#if current_step == 50:
 						print 'saving model'
-						path = saver.save(sess,save_path +'TYPE_GRU_model',global_step=current_step)
+						path = saver.save(sess,save_path +'TYPE_MT_GRU_model',global_step=current_step)
 						tempstr = 'have saved model to '+path
 						print tempstr
 
 			if itchat_run:
 				itchat.send('training has been finished!',FLAGS.wechat_name)
-
+'''
 if __name__ == "__main__":
 	if itchat_run:
 		itchat.auto_login(hotReload=True,enableCmdQR=2)

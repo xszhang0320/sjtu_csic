@@ -77,6 +77,8 @@ def init():
 
 		head_type=content[2]
 		tail_type=content[3]
+		head_type2id['NA'] = 0
+		tail_type2id['NA'] = 0
 		if not head_type2id.has_key(content[2]):	
 			head_type2id[content[2]]=len(head_type2id)
 		if not tail_type2id.has_key(content[3]):
@@ -156,9 +158,7 @@ def init():
         for k in tail_type2id:
                 f.write(str(k) + '\t' + str(tail_type2id[k])+ '\n')
 	f.close()
-
-
-
+	
 	#length of sentence is 70
 	fixlen = 70
 	#max length of position embedding is 60 (-60~+60)
@@ -202,8 +202,8 @@ def init():
       			label_head = [0 for i in range(len(head_type2id))]
       			label_tail = [0 for i in range(len(tail_type2id))]
 			label[y_id] = 1
-      			label[head_id] = 1
-      			label[tail_id] = 1
+      			label_head[head_id] = 1
+      			label_tail[tail_id] = 1
 			train_ans[tup] = []
 			train_ans[tup].append([label,label_head, label_tail])
 		else:
@@ -213,8 +213,8 @@ def init():
 			label[y_id] = 1
       			label_head = [0 for i in range(len(head_type2id))]
       			label_tail = [0 for i in range(len(tail_type2id))]
-      			label[head_id] = 1
-      			label[tail_id] = 1     
+      			label_head[head_id] = 1
+      			label_tail[tail_id] = 1     
 			
 			temp = find_index([label,label_head,label_tail],train_ans[tup])
 			if temp == -1:
@@ -277,22 +277,37 @@ def init():
 		en1 = content[2]
 		en2 = content[3]
 		relation = 0
-		if content[4] not in relation2id:
-			relation = relation2id['NA']
-		else:
-			relation = relation2id[content[4]]		
+                if content[4] not in relation2id:
+                        relation = relation2id['NA']
+                else:
+                        relation = relation2id[content[4]]
+
+                if(content[4] not in relation2type):
+                        head_id = 0
+                        tail_id = 0
+                else:
+                        head_id = head_type2id[relation2type[content[4]][0]]
+                        tail_id = tail_type2id[relation2type[content[4]][1]]
+	
 		tup = (en1,en2)
 		
 		if tup not in test_sen:
 			test_sen[tup]=[]
 			y_id = relation
 			label_tag = 0
-			label = [0 for i in range(len(relation2id))]
-			label[y_id] = 1
-			test_ans[tup] = label
+                        label = [0 for i in range(len(relation2id))]
+                        label_head = [0 for i in range(len(head_type2id))]
+                        label_tail = [0 for i in range(len(tail_type2id))]
+                        label[y_id] = 1
+                        label_head[head_id] = 1
+                        label_tail[tail_id] = 1
+			test_ans[tup] = [label,label_head, label_tail]
 		else:
 			y_id = relation
-			test_ans[tup][y_id] = 1
+			test_ans[tup][0][y_id] = 1
+			#print 'test ans tup label head length %s' % test_ans[tup]
+			test_ans[tup][1][head_id] = 1
+			test_ans[tup][2][tail_id] = 1
 			
 		sentence = content[5:-1]
 
@@ -336,6 +351,8 @@ def init():
   	train_y_tail = []
 	test_x = []
 	test_y = []
+	test_y_head = []
+	test_y_tail = []
 
 	print 'organizing train data'
 	f = open('./data/train_q&a.txt','w')
@@ -358,7 +375,11 @@ def init():
 	temp=0
 	for i in test_sen:		
 		test_x.append(test_sen[i])
-		test_y.append(test_ans[i])
+		#test_y.append(test_ans[i])
+                test_y.append(test_ans[i][j][0])
+                test_y_head.append(test_ans[i][j][1])
+                test_y_tail.append(test_ans[i][j][2])
+
 		tempstr = ''
 		for j in range(len(test_ans[i])):
 			if test_ans[i][j]!=0:
@@ -373,7 +394,8 @@ def init():
   	train_y_tail = np.array(train_y_tail)
 	test_x = np.array(test_x)
 	test_y = np.array(test_y)
-	
+	test_y_head = np.array(test_y_head)
+	test_y_tail = np.array(test_y_tail)
 
 	np.save('./data/vec.npy',vec)
 	np.save('./data/train_new_x.npy',train_x)
@@ -382,6 +404,8 @@ def init():
   	np.save('./data/train_new_y_tail.npy',train_y_tail)
 	np.save('./data/testall_new_x.npy',test_x)
 	np.save('./data/testall_new_y.npy',test_y)
+        np.save('./data/test_new_y_head.npy',test_y_head)
+        np.save('./data/test_new_y_tail.npy',test_y_tail)
 
 
 def seperate():

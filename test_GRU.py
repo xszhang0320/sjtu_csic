@@ -19,7 +19,7 @@ if itchat_run:
 def main(_):
 
 	# ATTENTION: change pathname before you load your model
-	pathname = "./model/TYPE_GRU_model-"
+	pathname = "./model/TYPE_MT_GRU_model-"
 	
 	wordembedding = np.load('./data/vec.npy')
 
@@ -37,7 +37,7 @@ def main(_):
 		#sess = tf.Session()
 		with sess.as_default():
 
-			def test_step(word_batch, pos1_batch, pos2_batch, ab_pos1_batch, ab_pos2_batch, y_batch):
+			def test_step(word_batch, pos1_batch, pos2_batch, ab_pos1_batch, ab_pos2_batch, y_batch , y_head_batch, y_tail_batch):
 	
 				feed_dict = {}
 				total_shape = []
@@ -76,17 +76,20 @@ def main(_):
 				feed_dict[mtest.absolute_pos1] = total_ab_pos1
 				feed_dict[mtest.absolute_pos2] = total_ab_pos2
 				feed_dict[mtest.input_y] = y_batch
+                                feed_dict[mtest.input_y_head] = y_head_batch
+                                feed_dict[mtest.input_y_tail] = y_tail_batch
+				
 
 				loss, accuracy ,prob= sess.run(
 					[mtest.loss, mtest.accuracy,mtest.prob], feed_dict)
 				return prob,accuracy
 
 			# evaluate p@n
-			def eval_pn(test_y,test_word,test_pos1,test_pos2,test_ab_pos1, test_ab_pos2,test_settings):
+			def eval_pn(test_y,test_y_head,test_y_tail,test_word,test_pos1,test_pos2,test_ab_pos1, test_ab_pos2,test_settings):
 				allprob = [] 
 				acc = []
 				for i in range(int(len(test_word)/float(test_settings.big_num))):
-					prob,accuracy = test_step(test_word[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y[i*test_settings.big_num:(i+1)*test_settings.big_num])
+					prob,accuracy = test_step(test_word[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y_head[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y_tail[i*test_settings.big_num:(i+1)*test_settings.big_num])
 					acc.append(np.mean(np.reshape(np.array(accuracy),(test_settings.big_num))))
 					prob = np.reshape(np.array(prob),(test_settings.big_num,test_settings.num_classes))
 					for single_prob in prob:
@@ -203,7 +206,7 @@ def main(_):
 				current_step = model_iter
 				
 				# ATTENTION: change the save path before you save your result !!
-				np.save('./out/allprob_type_iter_'+str(current_step)+'.npy',allprob)
+				np.save('./out/allprob_mt_iter_'+str(current_step)+'.npy',allprob)
 				allans = np.load('./data/allans.npy')
 				
 				#caculate the pr curve area

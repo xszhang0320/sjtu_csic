@@ -69,8 +69,8 @@ class GRU:
 		sen_a_r = tf.get_variable('attention',[gru_size*2])
                 sen_r_r = tf.get_variable('query',[gru_size*2,1])
                 #relation_embedding = tf.get_variable('relation_embedding',[self.num_classes,gru_size*2])
-		relation_embedding_head = tf.get_variable('relation_embedding_r',[self.num_head_types, gru_size])
-		relation_embedding_tail = tf.get_variable('relation_embedding_r',[self.num_tail_types, gru_size])
+		relation_embedding_head = tf.get_variable('relation_embedding_head',[self.num_head_types, gru_size])
+		relation_embedding_tail = tf.get_variable('relation_embedding_tail',[self.num_tail_types, gru_size])
                 relation_embedding_r = tf.get_variable('relation_embedding_r',[self.num_classes, gru_size*2])
                 sen_d_r = tf.get_variable('bias_d_r',[self.num_classes])
 
@@ -182,19 +182,19 @@ class GRU:
 		
 		# word-level attention layer
 		output_h = tf.add(output_forward,output_backward)
-		attention_r = tf.reshape(tf.batch_matmul(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.reshape(tf.tanh(output_h),[total_num*num_steps,gru_size]),attention_w),[total_num,num_steps])),[total_num,1,num_steps]),output_h),[total_num,gru_size])
+		#attention_r = tf.reshape(tf.batch_matmul(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.reshape(tf.tanh(output_h),[total_num*num_steps,gru_size]),attention_w),[total_num,num_steps])),[total_num,1,num_steps]),output_h),[total_num,gru_size])
 		
-		attention_h = tf.reshape(tf.batch_matmul(tf.reshape(tf.cast(self.absolute_pos1, tf.float32),[total_num,1,num_steps]),output_h),[total_num, gru_size])
-		attention_t = tf.reshape(tf.batch_matmul(tf.reshape(tf.cast(self.absolute_pos2, tf.float32),[total_num,1,num_steps]),output_h),[total_num, gru_size])
+		attention_head = tf.reshape(tf.batch_matmul(tf.reshape(tf.cast(self.absolute_pos1, tf.float32),[total_num,1,num_steps]),output_h),[total_num, gru_size])
+		attention_tail = tf.reshape(tf.batch_matmul(tf.reshape(tf.cast(self.absolute_pos2, tf.float32),[total_num,1,num_steps]),output_h),[total_num, gru_size])
 		
-		#attention_type = tf.concat(1 , [attention_h, attention_t])
+		attention_r = tf.concat(1 , [attention_head, attention_tail])
 		# sentence-level attention layer
 		for i in range(big_num):
 
 			#sen_repre_type.append(tf.tanh(attention_type[self.total_shape[i]:self.total_shape[i+1]]))
 			sen_repre_head.append(tf.tanh(attention_head[self.total_shape[i]:self.total_shape[i+1]]))
 			sen_repre_tail.append(tf.tanh(attention_tail[self.total_shape[i]:self.total_shape[i+1]]))
-			sen_repre_r.append(tf.tanh(attention_type[self.total_shape[i]:self.total_shape[i+1]]))
+			sen_repre_r.append(tf.tanh(attention_r[self.total_shape[i]:self.total_shape[i+1]]))
 
 			batch_size = self.total_shape[i+1]-self.total_shape[i]
 		
