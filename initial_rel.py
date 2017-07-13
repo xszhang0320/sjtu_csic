@@ -407,6 +407,77 @@ def init():
         np.save('./data/test_new_y_head.npy',test_y_head)
         np.save('./data/test_new_y_tail.npy',test_y_tail)
 
+	#get test data for P@N evaluation, in which only entity pairs with more than 1 sentence exist
+	print 'get test data for p@n test'
+	
+	pone_test_x = []
+	pone_test_y = []
+	pone_test_y_head = []
+	pone_test_y_tail = []
+
+	ptwo_test_x = []
+	ptwo_test_y = []
+	ptwo_test_y_head = []
+	ptwo_test_y_tail = []
+	
+	pall_test_x = []
+	pall_test_y = []
+	pall_test_y_head = []
+	pall_test_y_tail = []
+
+	for i in range(len(test_x)):
+		if len(test_x[i]) > 1:
+			
+			pall_test_x.append(test_x[i])
+			pall_test_y.append(test_y[i])
+			pall_test_y_head.append(test_y_head[i])
+			pall_test_y_tail.append(test_y_tail[i])
+			
+			onetest = []
+			temp = np.random.randint(len(test_x[i]))
+			onetest.append(test_x[i][temp])
+			pone_test_x.append(onetest)
+			pone_test_y.append(test_y[i])
+			pone_test_y_head.append(test_y_head[i])
+			pone_test_y_tail.append(test_y_tail[i])
+
+			twotest = []
+			temp1 = np.random.randint(len(test_x[i]))
+			temp2 = np.random.randint(len(test_x[i]))
+			while temp1 == temp2:
+				temp2 = np.random.randint(len(test_x[i]))
+			twotest.append(test_x[i][temp1])
+			twotest.append(test_x[i][temp2])
+			ptwo_test_x.append(twotest)
+			ptwo_test_y.append(test_y[i])
+			ptwo_test_y_head.append(test_y_head[i])
+			ptwo_test_y_tail.append(test_y_tail[i])
+
+	pone_test_x = np.array(pone_test_x)
+	pone_test_y = np.array(pone_test_y)
+	pone_test_y_head = np.array(pone_test_y_head)
+	pone_test_y_tail = np.array(pone_test_y_tail)
+	ptwo_test_x = np.array(ptwo_test_x)
+        ptwo_test_y_head = np.array(ptwo_test_y_head)
+        ptwo_test_y_tail = np.array(ptwo_test_y_tail)
+	ptwo_test_y = np.array(ptwo_test_y)	
+	pall_test_x = np.array(pall_test_x)
+	pall_test_y = np.array(pall_test_y)
+        pall_test_y_head = np.array(pall_test_y_head)
+        pall_test_y_tail = np.array(pall_test_y_tail)
+
+	np.save('./data/pone_test_x.npy',pone_test_x)
+	np.save('./data/pone_test_y.npy',pone_test_y)
+        np.save('./data/pone_test_y_head.npy',pone_test_y_head)
+        np.save('./data/pone_test_y_tail.npy',pone_test_y_tail)
+	np.save('./data/ptwo_test_x.npy',ptwo_test_x)
+	np.save('./data/ptwo_test_y.npy',ptwo_test_y)
+        np.save('./data/ptwo_test_y_head.npy',ptwo_test_y_head)
+        np.save('./data/ptwo_test_y_tail.npy',pone_test_y_tail)
+	np.save('./data/pall_test_x.npy',pall_test_x)
+	np.save('./data/pall_test_y.npy',pall_test_y)
+        np.save('./data/pall_test_y_head.npy',pall_test_y_head)
+        np.save('./data/pall_test_y_tail.npy',pall_test_y_tail)
 
 def seperate():
 	
@@ -461,7 +532,9 @@ def seperate():
 	np.save('./data/train_ab_pos2.npy', train_ab_pos2)
 
 	print 'seperating test all data'
+	print 'seperating test all'
 	x_test = np.load('./data/testall_new_x.npy')
+
 
 	test_word = []
 	test_pos1 = []
@@ -510,7 +583,108 @@ def seperate():
 	np.save('./data/testall_pos2.npy',test_pos2)
         np.save('./data/test_ab_pos1.npy', test_ab_pos1)
         np.save('./data/test_ab_pos2.npy', test_ab_pos2)
+	
+	print 'seperating test pone'
+	x_pone_test = np.load('./data/pone_test_x.npy')
 
+	test_word = []
+	test_pos1 = []
+	test_pos2 = []
+        test_ab_pos1 = []
+        test_ab_pos2 = []
+
+
+	for i in range(len(x_pone_test)):
+		word = []
+		pos1 = []
+		pos2 = []
+                ab_pos1 = []
+                ab_pos2 = []
+		for j in x_pone_test[i]:
+			temp_word = []
+			temp_pos1 = []
+			temp_pos2 = []
+	                temp_ab_pos1 = []
+        	        temp_ab_pos2 = []
+			for k in j:
+				temp_word.append(k[0])
+				temp_pos1.append(k[1])
+				temp_pos2.append(k[2])
+                                temp_ab_pos1.append(k[3])
+                                temp_ab_pos2.append(k[4])
+			word.append(temp_word)
+			pos1.append(temp_pos1)
+			pos2.append(temp_pos2)
+			ab_pos1.append(temp_ab_pos1)
+			ab_pos2.append(temp_ab_pos2)
+		test_word.append(word)
+		test_pos1.append(pos1)
+		test_pos2.append(pos2)
+		test_ab_pos1.append(ab_pos1)
+		test_ab_pos2.append(ab_pos2)
+
+	test_word = np.array(test_word)
+	test_pos1 = np.array(test_pos1)
+	test_pos2 = np.array(test_pos2)
+        test_ab_pos1 = np.array(test_ab_pos1)
+        test_ab_pos2 = np.array(test_ab_pos2)	
+
+	np.save('./data/pone_test_word.npy',test_word)
+	np.save('./data/pone_test_pos1.npy',test_pos1)
+	np.save('./data/pone_test_pos2.npy',test_pos2)
+        np.save('./data/pone_test_ab_pos1.npy', test_ab_pos1)
+        np.save('./data/pone_test_ab_pos2.npy', test_ab_pos2)
+
+	print 'seperating test ptwo'
+	x_ptwo_test = np.load('./data/ptwo_test_x.npy')
+	test_word = []
+	test_pos1 = []
+	test_pos2 = []
+        test_ab_pos1 = []
+        test_ab_pos2 = []
+
+
+	for i in range(len(x_ptwo_test)):
+		word = []
+		pos1 = []
+		pos2 = []
+                ab_pos1 = []
+                ab_pos2 = []
+		for j in x_ptwo_test[i]:
+			temp_word = []
+			temp_pos1 = []
+			temp_pos2 = []
+	                temp_ab_pos1 = []
+        	        temp_ab_pos2 = []
+			for k in j:
+				temp_word.append(k[0])
+				temp_pos1.append(k[1])
+				temp_pos2.append(k[2])
+                                temp_ab_pos1.append(k[3])
+                                temp_ab_pos2.append(k[4])
+			word.append(temp_word)
+			pos1.append(temp_pos1)
+			pos2.append(temp_pos2)
+			ab_pos1.append(temp_ab_pos1)
+			ab_pos2.append(temp_ab_pos2)
+		test_word.append(word)
+		test_pos1.append(pos1)
+		test_pos2.append(pos2)
+		test_ab_pos1.append(ab_pos1)
+		test_ab_pos2.append(ab_pos2)
+
+	test_word = np.array(test_word)
+	test_pos1 = np.array(test_pos1)
+	test_pos2 = np.array(test_pos2)
+        test_ab_pos1 = np.array(test_ab_pos1)
+        test_ab_pos2 = np.array(test_ab_pos2)	
+
+	np.save('./data/ptwo_test_word.npy',test_word)
+	np.save('./data/ptwo_test_pos1.npy',test_pos1)
+	np.save('./data/ptwo_test_pos2.npy',test_pos2)
+        np.save('./data/ptwo_test_ab_pos1.npy', test_ab_pos1)
+        np.save('./data/ptwo_test_ab_pos2.npy', test_ab_pos2)
+		
 def getsmall():
 	
  	print 'reading training data'

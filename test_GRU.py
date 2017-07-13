@@ -19,7 +19,7 @@ if itchat_run:
 def main(_):
 
 	# ATTENTION: change pathname before you load your model
-	pathname = "./model/TYPE_MT_GRU_model-"
+	pathname = "./model/MT_GRU_model-"
 	
 	wordembedding = np.load('./data/vec.npy')
 
@@ -149,35 +149,45 @@ def main(_):
 				if itchat_run:
 					itchat.send("Evaluating P@N for iter "+str(model_iter),FLAGS.wechat_name)
 
-				#print 'Evaluating P@N for one'
+				print 'Evaluating P@N for one'
 				#if itchat_run:
 				#	itchat.send('Evaluating P@N for one',FLAGS.wechat_name)
 
-				#test_y = np.load('./data/pone_test_y.npy')
-				#test_word = np.load('./data/pone_test_word.npy')
-				#test_pos1 = np.load('./data/pone_test_pos1.npy')
-				#test_pos2 = np.load('./data/pone_test_pos2.npy')
-				#eval_pn(test_y,test_word,test_pos1,test_pos2,test_settings)
+				test_y = np.load('./data/pone_test_y.npy')
+                                test_y_head = np.load('./data/pone_test_y_head.npy')
+                                test_y_tail = np.load('./data/pone_test_y_tail.npy')
+				test_word = np.load('./data/pone_test_word.npy')
+				test_pos1 = np.load('./data/pone_test_pos1.npy')
+				test_pos2 = np.load('./data/pone_test_pos2.npy')
+                                test_ab_pos1 = np.load('./data/pone_test_ab_pos1.npy')
+                                test_ab_pos2 = np.load('./data/pone_test_ab_pos2.npy')
+				eval_pn(test_y,test_y_head,test_y_tail,test_word,test_pos1,test_pos2, test_ab_pos1, test_ab_pos2,test_settings)
 
-				#print 'Evaluating P@N for two'
+				print 'Evaluating P@N for two'
 				#if itchat_run:
 				#	itchat.send('Evaluating P@N for two',FLAGS.wechat_name)
-				#test_y = np.load('./data/ptwo_test_y.npy')
-				#test_word = np.load('./data/ptwo_test_word.npy')
-				#test_pos1 = np.load('./data/ptwo_test_pos1.npy')
-				#test_pos2 = np.load('./data/ptwo_test_pos2.npy')
-				#eval_pn(test_y,test_word,test_pos1,test_pos2,test_settings)
+				test_y = np.load('./data/ptwo_test_y.npy')
+                                test_y_head = np.load('./data/ptwo_test_y_head.npy')
+                                test_y_tail = np.load('./data/ptwo_test_y_tail.npy')
+				test_word = np.load('./data/ptwo_test_word.npy')
+				test_pos1 = np.load('./data/ptwo_test_pos1.npy')
+				test_pos2 = np.load('./data/ptwo_test_pos2.npy')
+                                test_ab_pos1 = np.load('./data/ptwo_test_ab_pos1.npy')
+                                test_ab_pos2 = np.load('./data/ptwo_test_ab_pos2.npy')
+				eval_pn(test_y,test_y_head,test_y_tail,test_word,test_pos1,test_pos2, test_ab_pos1, test_ab_pos2, test_settings)
 				#
 				#print 'Evaluating P@N for all'
 				#if itchat_run:
 				#	itchat.send('Evaluating P@N for all',FLAGS.wechat_name)
 				#test_y = np.load('./data/pall_test_y.npy')
+                                #test_y_head = np.load('./data/pall_test_y_head.npy')
+                                #test_y_tail = np.load('./data/pall_test_y_tail.npy')
 				#test_word = np.load('./data/pall_test_word.npy')
 				#test_pos1 = np.load('./data/pall_test_pos1.npy')
 				#test_pos2 = np.load('./data/pall_test_pos2.npy')
-                                #test_ab_pos1 = np.load('./data/pall_test_ab_pos1.npy')
-                                #test_ab_pos2 = np.load('./data/pall_test_ab_pos2.npy')
-				#eval_pn(test_y,test_word,test_pos1,test_pos2, test_ab_pos1,test_ab_pos2,test_settings)
+                                #test_ab_pos1 = np.load('./data/test_ab_pos1.npy')
+                                #test_ab_pos2 = np.load('./data/test_ab_pos2.npy')
+				#eval_pn(test_y,test_y_head,test_y_tail,test_word,test_pos1,test_pos2, test_ab_pos1,test_ab_pos2,test_settings)
 				
 				time_str = datetime.datetime.now().isoformat()
 				print time_str
@@ -208,7 +218,7 @@ def main(_):
 				current_step = model_iter
 				
 				# ATTENTION: change the save path before you save your result !!
-				np.save('./out/allprob_mt_iter_'+str(current_step)+'.npy',allprob)
+				np.save('./out/allprob_final_mt_iter_'+str(current_step)+'.npy',allprob)
 				allans = np.load('./data/allans.npy')
 				
 				#caculate the pr curve area

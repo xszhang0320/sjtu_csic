@@ -184,7 +184,7 @@ def main(_):
 					if current_step > 9000 and current_step%100==0: #ATTENTION
 					#if current_step == 50:
 						print 'saving model'
-						path = saver.save(sess,save_path +'TYPE_MT_GRU_model',global_step=current_step)
+						path = saver.save(sess,save_path +'MT_GRU_model',global_step=current_step)
 						tempstr = 'have saved model to '+path
 						print tempstr
 
