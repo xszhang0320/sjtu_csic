@@ -376,9 +376,9 @@ def init():
 	for i in test_sen:		
 		test_x.append(test_sen[i])
 		#test_y.append(test_ans[i])
-                test_y.append(test_ans[i][j][0])
-                test_y_head.append(test_ans[i][j][1])
-                test_y_tail.append(test_ans[i][j][2])
+                test_y.append(test_ans[i][0])
+                test_y_head.append(test_ans[i][1])
+                test_y_tail.append(test_ans[i][2])
 
 		tempstr = ''
 		for j in range(len(test_ans[i])):

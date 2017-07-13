@@ -186,6 +186,8 @@ def main(_):
 					itchat.send('Evaluating all test data and save data for PR curve',FLAGS.wechat_name)
 				
 				test_y = np.load('./data/testall_y.npy')
+				test_y_head = np.load('./data/test_new_y_head.npy')
+				test_y_tail = np.load('./data/test_new_y_tail.npy')
 				test_word = np.load('./data/testall_word.npy')
 				test_pos1 = np.load('./data/testall_pos1.npy')
 				test_pos2 = np.load('./data/testall_pos2.npy')
@@ -194,7 +196,7 @@ def main(_):
 				allprob = [] 
 				acc = []
 				for i in range(int(len(test_word)/float(test_settings.big_num))):
-					prob,accuracy = test_step(test_word[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y[i*test_settings.big_num:(i+1)*test_settings.big_num])
+					prob,accuracy = test_step(test_word[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos1[i*test_settings.big_num:(i+1)*test_settings.big_num],test_ab_pos2[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y_head[i*test_settings.big_num:(i+1)*test_settings.big_num],test_y_tail[i*test_settings.big_num:(i+1)*test_settings.big_num])
 					acc.append(np.mean(np.reshape(np.array(accuracy),(test_settings.big_num))))
 					prob = np.reshape(np.array(prob),(test_settings.big_num,test_settings.num_classes))
 					for single_prob in prob:

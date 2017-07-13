@@ -30,7 +30,7 @@ for one_iter in model_iter:
         	plt.plot(recall,precision,color = color[i],lw=2,label = filename[i])
 
 	y_true = np.load('./data/allans.npy')
-	y_scores = np.load('./out/allprob_type_iter_'+str(one_iter)+'.npy')
+	y_scores = np.load('./out/allprob_mt_iter_'+str(one_iter)+'.npy')
 	average_precision = average_precision_score(y_true, y_scores)
 	if average_precision < 0.36 :
 		continue
@@ -45,6 +45,6 @@ for one_iter in model_iter:
 	plt.title('Precision-Recall Area={0:0.2f}'.format(average_precision))
 	plt.legend(loc="upper right")
 	plt.grid(True)
-	plt.savefig('./tmp/type_mt_iter_'+str(one_iter))
+	plt.savefig('./tmp/mt_iter_'+str(one_iter))
 
 	plt.close(0)

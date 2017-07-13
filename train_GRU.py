@@ -175,22 +175,7 @@ def main(_):
 					temp_y = np.array(temp_y)
 					temp_y_head = np.array(temp_y_head)
 					temp_y_tail = np.array(temp_y_tail)
-					#print 'y_head shape %s' % temp_y_head.shape
-					f = open('./tmp/y_head.txt','w')
-					for i in temp_y_head:
-						for j in temp_y_head[i]:
-							f.write(str(temp_y_head[i][j])+'\t')
-						f.write('\n')
-					f.close()
-					#print 'y_tail shape %s' % temp_y_tail.shape
-					f = open('./tmp/y_tail.txt','w')
-                                        for i in temp_y_tail:
-                                                for j in temp_y_tail[i]:
-                                                        f.write(str(temp_y_tail[i][j])+'\t')
-                                                f.write ('\n')
-					f.close()
-                                        #print 'y_tail %s' %temp_y_tail
-'''
+
 					train_step(temp_word,temp_pos1,temp_pos2, temp_ab_pos1, temp_ab_pos2 ,temp_y, temp_y_head, temp_y_tail, settings.big_num)
 
 					current_step = tf.train.global_step(sess, global_step)
@@ -205,7 +190,7 @@ def main(_):
 
 			if itchat_run:
 				itchat.send('training has been finished!',FLAGS.wechat_name)
-'''
+
 if __name__ == "__main__":
 	if itchat_run:
 		itchat.auto_login(hotReload=True,enableCmdQR=2)

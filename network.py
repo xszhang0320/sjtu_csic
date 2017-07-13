@@ -9,8 +9,8 @@ class Settings(object):
 		self.num_steps = 70
 		self.num_epochs = 3
 		self.num_classes = 53
-		self.num_head_types = 28
-		self.num_tail_types = 25
+		self.num_head_types = 29
+		self.num_tail_types = 26
 		self.gru_size = 230
 		self.keep_prob = 0.5
 		self.num_layers = 1
