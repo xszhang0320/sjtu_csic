@@ -22,8 +22,8 @@ import numpy as np
 model_iter = range(9100,15000,100)
 for one_iter in model_iter:
 	plt.clf()
-	filename = ['Hoffmann','MIMLRE','Mintz','PCNN+ATT']
-	color = ['turquoise', 'darkorange', 'cornflowerblue','darkgreen' ]
+	filename = ['Hoffmann','MIMLRE','Mintz','CNN+ATT', 'PCNN+ATT']
+	color = ['turquoise', 'darkorange', 'red' , 'cornflowerblue','darkgreen' ]
 	for i in range(len(filename)):
         	precision = np.load('./data/'+filename[i]+'_precision.npy')
         	recall  = np.load('./data/'+filename[i]+'_recall.npy')

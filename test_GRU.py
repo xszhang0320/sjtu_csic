@@ -138,9 +138,9 @@ def main(_):
 			
 
 			# ATTENTION: change the list to the iters you want to test !!
-			testlist = range(9100,15000,100)
+			#testlist = range(9100,15000,100)
 			#testlist = [9500,10000,10500,11000,11500,12000,12500,13000,13500,14000]
-			#testlist = [10900]
+			testlist = [9300]
 			for model_iter in testlist:
 
 				saver.restore(sess,pathname+str(model_iter))
